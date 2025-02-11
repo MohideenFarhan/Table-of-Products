@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Table of Products</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <main class="container">
+        <h1>Table of Products</h1>
+        <section class="input-container">
+            <input type="text" id="inputs" placeholder="Enter the Product ID">
+            <button id="btn">Get Product</button>
+        </section>
+
+        <section class="add-product">
+            <h2>Add New Product</h2>
+            <input type="number" id="id" placeholder="ID">
+            <input type="text" id="title" placeholder="Product Title">
+            <input type="number" id="price" placeholder="Price">
+            <input type="text" id="category" placeholder="Category">
+            <input type="text" id="image" placeholder="Image URL">
+            <input type="text" id="description" placeholder="Description">
+            <button id="add-btn">Submit</button>
+        </section>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Title</th>
+                    <th>Price</th>
+                    <th>Category</th>
+                    <th>Image</th>
+                    <th>Desc</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody id="product-table">
+            </tbody>
+        </table>
+    </main>
+    <script src="javascript/script.js"></script>
+</body>
+</html>
