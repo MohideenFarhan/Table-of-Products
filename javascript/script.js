@@ -225,12 +225,14 @@ cancelDeleteBtn.addEventListener("click", () => {
 
 function editProduct(product, row) {
     editingProductId = product.id;
+    document.getElementById("id").value = product.id;
     document.getElementById("title").value = product.title;
     document.getElementById("price").value = product.price;
     document.getElementById("category").value = product.category;
     document.getElementById("image").value = product.image;
     document.getElementById("description").value = product.description;
 
+    document.querySelector(".add-product h2").innerText = "Update Product";
     addProduct.style.display = "block";
     addButton.style.display = "none";
     updateButton.style.display = "block";
@@ -272,6 +274,7 @@ function updateProductInTable(updatedProduct) {
 // Show add product form
 function showAddProductForm() {
     clearForm();
+    document.querySelector(".add-product h2").innerText = "Add New Product";
     addProduct.style.display = "block";
     addButton.style.display = "block";
     updateButton.style.display = "none";
