@@ -2,8 +2,13 @@ const tablebody = document.getElementById("product-table");
 const button1 = document.getElementById("btn");
 const addProduct = document.querySelector(".add-product");
 const inputContainer = document.querySelector(".input-container");
+const buttonContainer = document.querySelector(".button-container");
 const addButton = document.createElement("button");
 const updateButton = document.createElement("button");
+
+const deletePopup = document.getElementById("delete-popup");
+const confirmDeleteBtn = document.getElementById("confirm-delete");
+const cancelDeleteBtn = document.getElementById("cancel-delete");
 
 addButton.innerText = "Add Product";
 updateButton.innerText = "Update Product";
@@ -14,8 +19,8 @@ updateButton.classList.add("update-btn");
 addButton.style.display = "none";
 updateButton.style.display = "none";
 
-addProduct.appendChild(addButton);
-addProduct.appendChild(updateButton);
+buttonContainer.appendChild(addButton);
+buttonContainer.appendChild(updateButton);
 
 let editingProductId = null;
 
@@ -35,31 +40,86 @@ modal.addEventListener("click", (event) => {
     }
 });
 
-// Fetch all products
-fetch("https://fakestoreapi.com/products")
-    .then(res => res.json())
-    .then(products => {
-        tablebody.innerHTML = "";
-        products.forEach(product => renderProductRow(product));
-    })
-    .catch(error => console.error("Error fetching all products:", error));
-
-// Fetch single product
-button1.addEventListener("click", () => {
-    const inputs = document.getElementById("inputs").value;
-    tablebody.innerHTML = "";
-
-    if (inputs === "") {
-        alert("Enter the Product ID");
-        return;
-    }
-
-    fetch(`https://fakestoreapi.com/products/${inputs}`)
-        .then(res => res.json())
-        .then(product => renderProductRow(product))
-        .catch(error => console.error("Error fetching product:", error));
+document.querySelector(".close-modal").addEventListener("click", () => {
+    addProduct.style.display = "none";
+    addButton.style.display = "none";
+    updateButton.style.display = "none";
+    clearForm();
 });
 
+document.getElementById("reset-btn").addEventListener("click",(event)=>{
+    event.preventDefault();
+    clearForm();
+});
+
+// Fetching API
+async function fetchData(url, method = "GET", data = null) {
+    try {
+        const options = { 
+            method, 
+            headers: { "Content-Type": "application/json" }
+        };
+        if (data) options.body = JSON.stringify(data);
+
+        const res = await fetch(url, options);
+        if (!res.ok) throw new Error(`HTTP error! Status: ${res.status}`);
+
+        return await res.json();
+    } catch (error) {
+        console.error(`Error fetching ${url}:`, error);
+        return null;
+    }
+}
+
+// Fetch all products
+async function fetchAllProducts() {
+    const products = await fetchData("https://fakestoreapi.com/products");
+    if (products) {
+        tablebody.innerHTML = "";
+        products.forEach(product => renderProductRow(product));
+    }
+}
+
+fetchAllProducts();
+
+// Fetch single product
+async function fetchSingleProduct(productId) {
+    if (!productId) {
+        fetchAllProducts();
+        return;
+    }
+    const product = await fetchData(`https://fakestoreapi.com/products/${productId}`);
+    
+    if (product) {
+        tablebody.innerHTML = "";
+        renderProductRow(product);
+    } else {
+        console.warn("Product not found. Showing all products.");
+        fetchAllProducts(); 
+    }
+}
+
+button1.addEventListener("click", () => {
+    const productId = document.getElementById("inputs").value.trim();
+    fetchSingleProduct(productId);
+});
+
+//fetch the categories
+function fetchCategories(){
+    fetch("https://fakestoreapi.com/products/categories")
+    .then(res=> res.json())
+    .then(categories =>{
+        const categoryDropdown=document.getElementById("category");
+        categoryDropdown.innerHTML = `<option value="">Select Category</option>`;
+        categories.forEach(category=>{
+            categoryDropdown.innerHTML += `<option value="${category}">${category}</option>`;
+        });
+    })
+    .catch(error => console.error("Error fetching categories:", error));
+}
+fetchCategories();
+
+//renderProductRow
 function renderProductRow(product) {
     const row = document.createElement("tr");
     
@@ -95,28 +155,23 @@ function renderProductRow(product) {
 }
 
 // Adding a new product
-addButton.addEventListener("click", () => {
+async function addNewProduct() {
     const newProduct = getProductFromForm();
     if (!newProduct) return;
 
-    fetch("https://fakestoreapi.com/products", {
-        method: "POST",
-        body: JSON.stringify(newProduct),
-        headers: { "Content-Type": "application/json" }
-    })
-    .then(res => res.json())
-    .then(product => {
+    const product = await fetchData("https://fakestoreapi.com/products", "POST", newProduct);
+    if (product) {
+        product.id = Math.floor(Math.random() * 10000); 
         renderProductRow(product);
         clearForm();
         addProduct.style.display = "none";
-    })
+    }
+}
+addButton.addEventListener("click", addNewProduct);
 
-    
-    .catch(error => console.error("Error adding product:", error));
-});
 
 // Updating a product
-updateButton.addEventListener("click", () => {
+async function updateProduct() {
     if (!editingProductId) {
         alert("No product selected for update");
         return;
@@ -125,34 +180,48 @@ updateButton.addEventListener("click", () => {
     const updatedProduct = getProductFromForm();
     if (!updatedProduct) return;
 
-    fetch(`https://fakestoreapi.com/products/${editingProductId}`, {
-        method: "PUT",
-        body: JSON.stringify(updatedProduct),
-        headers: { "Content-Type": "application/json" }
-    })
-    .then(res => res.json())
-    .then(updatedProduct => {
-        updateProductInTable(updatedProduct);
+    const product = await fetchData(`https://fakestoreapi.com/products/${editingProductId}`, "PUT", updatedProduct);
+    if (product) {
+        updateProductInTable(product);
         clearForm();
         addProduct.style.display = "none";
         addButton.style.display = "none";
         updateButton.style.display = "none";
         editingProductId = null;
-    })
-    .catch(error => console.error("Error updating product:", error));
-});
+    }
+}
+updateButton.addEventListener("click", updateProduct);
+
 
 // Deleting a product
-function deleteProduct(productId, row) {
-    if (!confirm("Are you sure you want to delete this product?")) return;
+let productToDelete = null;
+let rowToDelete = null;
 
-    fetch(`https://fakestoreapi.com/products/${productId}`, {
-        method: "DELETE"
-    })
-    .then(res => res.json())
-    .then(() => row.remove())
-    .catch(error => console.error("Error deleting product:", error));
+function deleteProduct(productId, row) {
+    productToDelete = productId;
+    rowToDelete = row;
+    deletePopup.style.display = "flex"; 
 }
+
+confirmDeleteBtn.addEventListener("click", async () => {
+    const response = await fetchData(`https://fakestoreapi.com/products/${productToDelete}`, "DELETE");
+    
+    if (response) {
+        rowToDelete.remove(); 
+    } else {
+        console.warn("Failed to delete from API, removing from UI.");
+        rowToDelete.remove(); 
+    }
+
+    deletePopup.style.display = "none"; 
+    fetchAllProducts(); 
+});
+
+cancelDeleteBtn.addEventListener("click", () => {
+    deletePopup.style.display = "none"; 
+});
+
+
 
 function editProduct(product, row) {
     editingProductId = product.id;
@@ -182,7 +251,8 @@ function getProductFromForm() {
 }
 
 function clearForm() {
-    document.querySelectorAll(".add-product input").forEach(input => input.value = "");
+    document.querySelectorAll(".add-product input, .add-product textarea").forEach(input => input.value = "");
+    document.getElementById("category").value="";
 }
 
 // Updates the product in the table
