@@ -15,15 +15,30 @@
         </section>
 
         <section class="add-product">
+            <span class="close-modal">&times;</span>
             <h2>Add New Product</h2>
             <input type="number" id="id" placeholder="ID">
             <input type="text" id="title" placeholder="Product Title">
             <input type="number" id="price" placeholder="Price">
-            <input type="text" id="category" placeholder="Category">
+            <select id="category">
+                <option value="">Select Category</option>
+            </select>
             <input type="text" id="image" placeholder="Image URL">
-            <input type="text" id="description" placeholder="Description">
-            <!-- <button id="add-btn">Submit</button> -->
+            <textarea id="description" placeholder="Description"></textarea>
+            
+            <div class="button-container">
+                <button id="reset-btn">Reset</button>
+            </div>
         </section>
+
+        <section id="delete-popup" class="popup">
+            <div class="popup-content">
+                <p>Are you sure you want to delete this product?</p>
+                <button id="confirm-delete">Delete</button>
+                <button id="cancel-delete">Cancel</button>
+            </div>
+        </section>
+        
 
         <table>
             <thead>
